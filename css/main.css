@@ -23,17 +23,6 @@ header { padding: 40px 0; }
 .calc-info h1 { font-size: 42px; font-weight: 600; margin-bottom: 15px; }
 .calc-info p { color: #a0a0a0; max-width: 700px; margin: 0 auto; }
 
-.ad-placeholder {
-    background: #1c1f26;
-    border: 2px dashed #2a2e37;
-    color: #555;
-    text-align: center;
-    padding: 30px;
-    border-radius: 10px;
-    margin-bottom: 40px;
-    font-size: 14px;
-}
-
 .calc-box {
     display: flex;
     background: #1c1f26;
