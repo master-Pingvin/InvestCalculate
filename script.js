@@ -45,6 +45,11 @@ function calculateResult() {
     if (isNaN(monthlyAdd)) monthlyAdd = 0;
 
     let years = Number(document.getElementById('years').value);
+    if (years > 100) {
+        alert("Максимальный срок для расчета — 100 лет.");
+        document.getElementById('years').value = 10; // сбрасываем на 10
+        years = 10; // принудительно ставим 10 для расчетов
+    }
     let rate = Number(document.getElementById('rate').value);
     let inflation = Number(document.getElementById('inflation').value);
     let useTax = document.getElementById('taxCheck').checked;
