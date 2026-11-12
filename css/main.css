@@ -107,3 +107,77 @@ header { padding: 40px 0; }
     .chart-container { padding: 15px; }
     .presets { flex-direction: column; }
 }
+
+/* Стили для текста */
+.seo-text {
+    margin-top: 50px;
+    padding: 30px;
+    background: #1c1f26;
+    border-radius: 15px;
+}
+
+.seo-text h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #FA9021;
+}
+
+.seo-text p {
+    margin-bottom: 15px;
+    line-height: 1.8;
+    color: #d1d1d1;
+}
+
+/* Стили для FAQ */
+.faq {
+    margin-top: 40px;
+    padding: 30px;
+    background: #1c1f26;
+    border-radius: 15px;
+}
+
+.faq h2 {
+    font-size: 28px;
+    margin-bottom: 25px;
+    color: #FA9021;
+}
+
+details {
+    margin-bottom: 15px;
+    background: #0f1115;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+summary {
+    padding: 15px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #fff;
+    list-style: none; /* Убирает стандартный маркер */
+    position: relative;
+}
+
+summary::-webkit-details-marker {
+    display: none; /* Убирает маркер в Chrome */
+}
+
+summary::after {
+    content: '+';
+    position: absolute;
+    right: 20px;
+    font-size: 20px;
+    color: #FA9021;
+    transition: transform 0.3s;
+}
+
+details[open] summary::after {
+    content: '-';
+    transform: rotate(180deg);
+}
+
+details p {
+    padding: 0 20px 20px 20px;
+    color: #a0a0a0;
+    line-height: 1.6;
+}
