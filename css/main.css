@@ -134,6 +134,7 @@ header { padding: 40px 0; }
     padding: 30px;
     background: #1c1f26;
     border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .faq h2 {
@@ -143,41 +144,61 @@ header { padding: 40px 0; }
 }
 
 details {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     background: #0f1115;
     border-radius: 8px;
+    border: 1px solid #2a2e37;
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+details:hover {
+    border-color: #FA9021;
+}
+
+details[open] {
+    border-color: #FA9021;
+    background: #16191f;
 }
 
 summary {
-    padding: 15px 20px;
+    padding: 18px 20px;
     cursor: pointer;
     font-weight: 500;
+    font-size: 16px;
     color: #fff;
-    list-style: none; /* Убирает стандартный маркер */
+    list-style: none;
     position: relative;
+    user-select: none;
 }
 
 summary::-webkit-details-marker {
-    display: none; /* Убирает маркер в Chrome */
+    display: none;
 }
 
+/* Иконка плюса/минуса */
 summary::after {
     content: '+';
     position: absolute;
     right: 20px;
-    font-size: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
     color: #FA9021;
-    transition: transform 0.3s;
+    transition: transform 0.3s ease;
 }
 
 details[open] summary::after {
     content: '-';
-    transform: rotate(180deg);
+    transform: translateY(-50%) rotate(180deg);
 }
 
 details p {
     padding: 0 20px 20px 20px;
     color: #a0a0a0;
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 15px;
+    border-top: 1px solid #2a2e37;
+    padding-top: 15px;
+    margin-top: 5px;
 }
