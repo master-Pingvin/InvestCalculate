@@ -3,12 +3,20 @@ let myChart = null;
 document.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
 
-    // Обработчики кнопок и переключателей
+    // Обработчики
     document.getElementById('calcBtn').addEventListener('click', calculateResult);
     document.getElementById('taxCheck').addEventListener('change', calculateResult);
     document.getElementById('depositCheck').addEventListener('change', calculateResult);
     document.getElementById('reinvestCheck').addEventListener('change', calculateResult);
     document.getElementById('statsCheck').addEventListener('change', calculateResult);
+    document.getElementById('periodUnit').addEventListener('change', () => {
+        // При смене единицы меняем значение по умолчанию для удобства
+        const unit = document.getElementById('periodUnit').value;
+        const input = document.getElementById('periodInput');
+        if (unit === 'years' && Number(input.value) > 50) input.value = 10;
+        if (unit === 'months' && Number(input.value) > 600) input.value = 12;
+        calculateResult();
+    });
 
     // Показ/скрытие расширенных настроек
     const advancedToggle = document.getElementById('advancedToggleBtn');
@@ -55,7 +63,7 @@ function formatNumberInput(val) {
 }
 
 function calculateResult() {
-    // Сбор данных
+    // 1. Сбор данных
     let startSum = Number(document.getElementById('startSum').value.replace(/[\s\u202F]/g, ''));
     let monthlyAdd = Number(document.getElementById('monthlyAdd').value.replace(/[\s\u202F]/g, ''));
     let monthlyWithdraw = Number(document.getElementById('monthlyWithdraw').value.replace(/[\s\u202F]/g, ''));
@@ -64,13 +72,19 @@ function calculateResult() {
     if (isNaN(monthlyAdd)) monthlyAdd = 0;
     if (isNaN(monthlyWithdraw)) monthlyWithdraw = 0;
 
-    let years = Number(document.getElementById('years').value);
+    let periodVal = Number(document.getElementById('periodInput').value);
+    let periodUnit = document.getElementById('periodUnit').value;
+    
+    // Перевод в годы и месяцы
+    let years = periodUnit === 'years' ? periodVal : periodVal / 12;
+    let months = periodUnit === 'years' ? periodVal * 12 : periodVal;
+
     if (years > 100) {
         alert("Максимальный срок для расчета — 100 лет.");
-        document.getElementById('years').value = 10;
-        years = 10;
+        return;
     }
-    
+    if (years <= 0) return;
+
     let rate = Number(document.getElementById('rate').value);
     let inflation = Number(document.getElementById('inflation').value);
     let annualIncrease = Number(document.getElementById('annualIncrease').value) / 100;
@@ -80,109 +94,116 @@ function calculateResult() {
     let isReinvest = document.getElementById('reinvestCheck').checked;
     let showStats = document.getElementById('statsCheck').checked;
 
-    if (startSum < 0 || monthlyAdd < 0 || monthlyWithdraw < 0 || years <= 0 || rate < 0 || inflation < 0) {
-        return;
-    }
+    if (startSum < 0 || monthlyAdd < 0 || monthlyWithdraw < 0 || rate < 0 || inflation < 0) return;
 
     saveToStorage();
 
+    // 2. Математика
     let monthlyRate = (rate / 100) / 12;
-    let months = years * 12;
+    let inflationMonthly = (inflation / 100) / 12;
+    
     let total = startSum;
     let invested = startSum;
     let totalInterestIncome = 0;
-    let totalWithdrawn = 0; // Для учета снятий
+    let totalWithdrawn = 0; 
+    let currentMonthlyWithdraw = monthlyWithdraw; // Для индексации снятий
 
-    // Данные для графиков (по годам или месяцам)
+    // Данные для графиков
     let labels = ['Старт'];
     let dataTotal = [total];
     let dataInvested = [invested];
     let dataDeposit = [total];
     let dataInterest = [0];
 
-    // Для статистики по месяцам
+    // Для статистики
     let monthlyStatsData = [];
 
     let depositMonthlyRate = (10 / 100) / 12;
     let depositTotal = startSum;
     let currentMonthlyAdd = monthlyAdd;
 
+    // 3. Цикл по месяцам
     for (let i = 1; i <= months; i++) {
-        // 1. Начисляем проценты
+        // Начисление процентов
         let monthlyInterest = total * monthlyRate;
         
         if (isReinvest) {
             total = total + monthlyInterest;
-            totalInterestIncome = totalInterestIncome + monthlyInterest;
         } else {
-            // Если не реинвестируем, проценты уходят в "выплачено на руки"
             totalWithdrawn = totalWithdrawn + monthlyInterest;
-            totalInterestIncome = totalInterestIncome + monthlyInterest;
         }
+        totalInterestIncome = totalInterestIncome + monthlyInterest;
         
-        // 2. Пополнение / Снятие
-        // Если мы снимаем больше, чем пополняем, это уменьшает капитал
-        total = total + currentMonthlyAdd - monthlyWithdraw;
+        // Пополнение / Снятие
+        total = total + currentMonthlyAdd - currentMonthlyWithdraw;
         invested = invested + currentMonthlyAdd;
-        totalWithdrawn = totalWithdrawn + monthlyWithdraw;
+        totalWithdrawn = totalWithdrawn + currentMonthlyWithdraw;
 
-        // 3. Банковский вклад (для сравнения)
+        // Банковский вклад
         depositTotal = depositTotal + (depositTotal * depositMonthlyRate);
         depositTotal = depositTotal + currentMonthlyAdd;
 
-        // 4. Увеличение взноса раз в год
-        if (annualIncrease > 0 && i % 12 === 0) {
-            currentMonthlyAdd = currentMonthlyAdd * (1 + annualIncrease);
+        // Ежегодная индексация (раз в 12 месяцев)
+        if (i % 12 === 0) {
+            if (annualIncrease > 0) currentMonthlyAdd = currentMonthlyAdd * (1 + annualIncrease);
+            // Индексация снятий на инфляцию
+            if (inflation > 0 && currentMonthlyWithdraw > 0) currentMonthlyWithdraw = currentMonthlyWithdraw * (1 + (inflation / 100));
         }
 
-        // 5. Сбор данных для графиков
-        // Если срок <= 5 лет, собираем каждый месяц. Иначе раз в год.
-        if (years <= 5 || i % 12 === 0 || i === 1) {
-            labels.push(i === 1 ? '1 мес' : (years <= 5 ? `${i} мес` : `Год ${i / 12}`));
+        // Сбор данных для графика (умный шаг)
+        let shouldAddPoint = false;
+        if (months <= 12) shouldAddPoint = true; // До года - каждый месяц
+        else if (months <= 36 && i % 2 === 0) shouldAddPoint = true; // 1-3 года - раз в 2 мес
+        else if (months <= 60 && i % 6 === 0) shouldAddPoint = true; // 3-5 лет - раз в полгода
+        else if (months > 60 && i % 12 === 0) shouldAddPoint = true; // Больше 5 лет - раз в год
+
+        if (shouldAddPoint || i === 1) { // i === 1 чтобы всегда была первая точка
+            let labelText = '';
+            if (months <= 12) labelText = `${i} мес`;
+            else if (months <= 36) labelText = `${i} мес`;
+            else if (months <= 60) labelText = `${i} мес`;
+            else labelText = `Год ${i / 12}`;
+            
+            labels.push(labelText);
             dataTotal.push(total);
             dataInvested.push(invested);
             dataDeposit.push(depositTotal);
             dataInterest.push(totalInterestIncome);
         }
 
-        // 6. Сбор данных для статистики (если включено)
+        // Сбор данных для статистики
         if (showStats) {
             monthlyStatsData.push({
                 month: i,
                 invested: invested,
-                interest: totalInterestIncome,
-                withdrawn: totalWithdrawn,
+                interest: monthlyInterest, // Локальный доход за месяц
+                withdrawn: currentMonthlyWithdraw, // Текущее снятие (с индексацией)
                 total: total
             });
         }
     }
 
-    // Расчет итоговых показателей
+    // 4. Итоги
     let profit = total + totalWithdrawn - invested;
-    
-    // Налог (упрощенно считаем со всей прибыли + снятий)
-    let taxableBase = profit; 
-    let tax = useTax ? taxableBase * 0.13 : 0;
-    
+    let tax = useTax ? profit * 0.13 : 0;
     let finalProfit = profit - tax;
-    let finalTotal = total; // Капитал на счету
+    let finalTotal = total;
     let realValue = finalTotal / Math.pow((1 + (inflation / 100)), years);
     
-    // Реальная доходность (упрощенная формула Фишера)
-    // ((1 + номинальная) / (1 + инфляция)) - 1
     let realRate = ((1 + (rate/100)) / (1 + (inflation/100))) - 1;
-    // Учтем налог, если он есть (упрощенно уменьшим ставку)
     if (useTax) realRate = realRate - (realRate * 0.13);
 
-    // Вывод результатов
+    // 5. Вывод
     animateValue("investedResult", invested);
     animateValue("taxResult", tax);
     animateValue("profitResult", finalProfit, "+");
     animateValue("totalResult", finalTotal);
     animateValue("realResult", realValue);
-    document.getElementById('realRateResult').textContent = (realRate * 100).toFixed(1) + '%';
+    
+    // Анимация процентов
+    animateValue("realRateResult", realRate * 100, "", "%", true);
 
-    // Показ/скрытие строки "Выплачено на руки"
+    // Строка "Выплачено на руки"
     const withdrawnCard = document.getElementById('withdrawnResultCard');
     if (totalWithdrawn > 0) {
         withdrawnCard.style.display = 'flex';
@@ -191,22 +212,23 @@ function calculateResult() {
         withdrawnCard.style.display = 'none';
     }
 
-    // Отрисовка графиков и таблицы
+    // Отрисовка
     renderChart(labels, dataTotal, dataInvested, useDeposit ? dataDeposit : null, dataInterest);
     
     if (showStats) {
-        renderMonthlyStats(monthlyStatsData);
+        renderMonthlyStats(monthlyStatsData, monthlyWithdraw > 0);
         document.getElementById('monthlyStatsContainer').classList.remove('hidden');
     } else {
         document.getElementById('monthlyStatsContainer').classList.add('hidden');
     }
 }
 
-function animateValue(id, endValue, prefix = "") {
+// Обновленная функция анимации (с поддержкой процентов)
+function animateValue(id, endValue, prefix = "", suffix = " ₽", isPercent = false) {
     const obj = document.getElementById(id);
     
     if (isNaN(endValue) || !isFinite(endValue)) {
-        obj.textContent = prefix + "0 ₽";
+        obj.textContent = prefix + "0" + suffix;
         return;
     }
 
@@ -217,13 +239,22 @@ function animateValue(id, endValue, prefix = "") {
         if (!startTimestamp) startTimestamp = timestamp;
         const progress = Math.min((timestamp - startTimestamp) / duration, 1);
         
-        const currentValue = Math.floor(progress * endValue);
-        obj.textContent = prefix + formatNumber(currentValue) + ' ₽';
+        let currentValue = progress * endValue;
+        
+        if (isPercent) {
+            obj.textContent = prefix + currentValue.toFixed(1) + suffix;
+        } else {
+            obj.textContent = prefix + formatNumber(Math.floor(currentValue)) + suffix;
+        }
         
         if (progress < 1) {
             window.requestAnimationFrame(step);
         } else {
-            obj.textContent = prefix + formatNumber(endValue) + ' ₽';
+            if (isPercent) {
+                obj.textContent = prefix + endValue.toFixed(1) + suffix;
+            } else {
+                obj.textContent = prefix + formatNumber(endValue) + suffix;
+            }
         }
     };
     window.requestAnimationFrame(step);
@@ -278,20 +309,20 @@ function renderChart(labels, dataTotal, dataInvested, dataDeposit, dataInterest)
     });
 }
 
-function renderMonthlyStats(data) {
+function renderMonthlyStats(data, showWithdrawn) {
     const container = document.getElementById('monthlyStatsContent');
-    container.innerHTML = ''; // Очищаем предыдущую таблицу
+    container.innerHTML = ''; 
 
     if (data.length === 0) return;
 
-    // Берем первые 12 месяцев и последние 12 месяцев (если срок больше 1 года)
     let displayData = data.slice(0, 12);
     if (data.length > 24) {
         displayData = displayData.concat(data.slice(-12));
     } else if (data.length > 12) {
-        displayData = data; // Если срок до 2 лет, показываем все
+        displayData = data; 
     }
 
+    // Формируем заголовок таблицы в зависимости от наличия снятий
     let tableHTML = `
         <table class="stats-table">
             <thead>
@@ -299,24 +330,23 @@ function renderMonthlyStats(data) {
                     <th>Месяц</th>
                     <th>Вложено (₽)</th>
                     <th>Доход (₽)</th>
-                    <th>Снято (₽)</th>
+                    ${showWithdrawn ? '<th>Снято (₽)</th>' : ''}
                     <th>Капитал (₽)</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    displayData.forEach(row => {
-        // Добавляем разделитель, если показываем начало и конец
-        if (displayData.indexOf(row) === 12 && data.length > 24) {
-            tableHTML += `<tr><td colspan="5" style="text-align:center; color:#555;">... (пропущено ${data.length - 24} месяцев) ...</td></tr>`;
+    displayData.forEach((row, index) => {
+        if (index === 12 && data.length > 24) {
+            tableHTML += `<tr><td colspan="${showWithdrawn ? 5 : 4}" style="text-align:center; color:#555;">... (пропущено ${data.length - 24} месяцев) ...</td></tr>`;
         }
         tableHTML += `
             <tr>
                 <td>${row.month}</td>
                 <td>${formatNumber(row.invested)}</td>
                 <td style="color: #4CAF50;">+${formatNumber(row.interest)}</td>
-                <td style="color: #3498db;">${formatNumber(row.withdrawn)}</td>
+                ${showWithdrawn ? `<td style="color: #3498db;">${formatNumber(row.withdrawn)}</td>` : ''}
                 <td style="color: #FA9021; font-weight: 600;">${formatNumber(row.total)}</td>
             </tr>
         `;
@@ -331,7 +361,8 @@ function saveToStorage() {
         startSum: document.getElementById('startSum').value.replace(/[\s\u202F]/g, ''),
         monthlyAdd: document.getElementById('monthlyAdd').value.replace(/[\s\u202F]/g, ''),
         monthlyWithdraw: document.getElementById('monthlyWithdraw').value.replace(/[\s\u202F]/g, ''),
-        years: document.getElementById('years').value,
+        periodVal: document.getElementById('periodInput').value,
+        periodUnit: document.getElementById('periodUnit').value,
         rate: document.getElementById('rate').value,
         inflation: document.getElementById('inflation').value,
         annualIncrease: document.getElementById('annualIncrease').value,
@@ -349,7 +380,17 @@ function loadFromStorage() {
             document.getElementById('startSum').value = formatNumberInput(data.startSum || '100000');
             document.getElementById('monthlyAdd').value = formatNumberInput(data.monthlyAdd || '10000');
             document.getElementById('monthlyWithdraw').value = formatNumberInput(data.monthlyWithdraw || '0');
-            document.getElementById('years').value = data.years || '10';
+            
+            // Загрузка срока
+            if (data.periodVal !== undefined) {
+                 document.getElementById('periodInput').value = data.periodVal;
+                 document.getElementById('periodUnit').value = data.periodUnit || 'years';
+            } else if (data.years !== undefined) {
+                 // Совместимость со старыми данными
+                 document.getElementById('periodInput').value = data.years;
+                 document.getElementById('periodUnit').value = 'years';
+            }
+            
             document.getElementById('rate').value = data.rate || '12';
             document.getElementById('inflation').value = data.inflation || '6';
             document.getElementById('annualIncrease').value = data.annualIncrease || '0';
