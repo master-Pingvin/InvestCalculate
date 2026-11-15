@@ -151,13 +151,15 @@ function calculateResult() {
         }
 
         // Сбор данных для графика (умный шаг)
+                // Сбор данных для графика (умный шаг)
         let shouldAddPoint = false;
         if (months <= 12) shouldAddPoint = true; // До года - каждый месяц
         else if (months <= 36 && i % 2 === 0) shouldAddPoint = true; // 1-3 года - раз в 2 мес
         else if (months <= 60 && i % 6 === 0) shouldAddPoint = true; // 3-5 лет - раз в полгода
         else if (months > 60 && i % 12 === 0) shouldAddPoint = true; // Больше 5 лет - раз в год
 
-        if (shouldAddPoint || i === 1) { // i === 1 чтобы всегда была первая точка
+        // Убрали принудительное добавление i === 1, чтобы не было точки "0.0833 года"
+        if (shouldAddPoint) { 
             let labelText = '';
             if (months <= 12) labelText = `${i} мес`;
             else if (months <= 36) labelText = `${i} мес`;
