@@ -100,6 +100,41 @@ header { padding: 40px 0; }
 }
 .chart-container h2 { text-align: center; margin-bottom: 20px; font-weight: 500; }
 
+/* Расширенные настройки */
+.advanced-toggle {
+    margin: 15px 0; cursor: pointer; color: #FA9021; font-size: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid #2a2e37;
+}
+.advanced-toggle:hover { opacity: 0.8; }
+.advanced-toggle .arrow { transition: transform 0.3s; }
+.advanced-toggle.active .arrow { transform: rotate(180deg); }
+
+.advanced-settings {
+    padding: 15px 0;
+    border-bottom: 1px solid #2a2e37;
+    margin-bottom: 20px;
+}
+
+.hidden { display: none !important; }
+
+/* Статистика по месяцам */
+.monthly-stats-container {
+    margin-top: 50px; background: #1c1f26; padding: 30px;
+    border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.monthly-stats-container h2 {
+    text-align: center; margin-bottom: 20px; font-weight: 500;
+}
+.stats-table {
+    width: 100%; border-collapse: collapse; color: #d1d1d1; font-size: 14px;
+}
+.stats-table th, .stats-table td {
+    padding: 10px; border-bottom: 1px solid #2a2e37; text-align: center;
+}
+.stats-table th { color: #FA9021; font-weight: 500; }
+.stats-table tr:hover { background: #16191f; }
+
 @media (max-width: 900px) {
     .calc-box { flex-direction: column; }
     .calc-form { border-right: none; border-bottom: 1px solid #2a2e37; }
@@ -115,13 +150,11 @@ header { padding: 40px 0; }
     background: #1c1f26;
     border-radius: 15px;
 }
-
 .seo-text h2 {
     font-size: 28px;
     margin-bottom: 20px;
     color: #FA9021;
 }
-
 .seo-text p {
     margin-bottom: 15px;
     line-height: 1.8;
@@ -136,13 +169,11 @@ header { padding: 40px 0; }
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-
 .faq h2 {
     font-size: 28px;
     margin-bottom: 25px;
     color: #FA9021;
 }
-
 details {
     margin-bottom: 12px;
     background: #0f1115;
@@ -151,16 +182,13 @@ details {
     overflow: hidden;
     transition: all 0.3s ease;
 }
-
 details:hover {
     border-color: #FA9021;
 }
-
 details[open] {
     border-color: #FA9021;
     background: #16191f;
 }
-
 summary {
     padding: 18px 20px;
     cursor: pointer;
@@ -171,12 +199,9 @@ summary {
     position: relative;
     user-select: none;
 }
-
 summary::-webkit-details-marker {
     display: none;
 }
-
-/* Иконка плюса/минуса */
 summary::after {
     content: '+';
     position: absolute;
@@ -187,12 +212,10 @@ summary::after {
     color: #FA9021;
     transition: transform 0.3s ease;
 }
-
 details[open] summary::after {
     content: '-';
     transform: translateY(-50%) rotate(180deg);
 }
-
 details p {
     padding: 0 20px 20px 20px;
     color: #a0a0a0;
