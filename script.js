@@ -300,3 +300,63 @@ function renderMonthlyStats(data) {
                     <th>Вложено (₽)</th>
                     <th>Доход (₽)</th>
                     <th>Снято (₽)</th>
+                    <th>Капитал (₽)</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    displayData.forEach(row => {
+        // Добавляем разделитель, если показываем начало и конец
+        if (displayData.indexOf(row) === 12 && data.length > 24) {
+            tableHTML += `<tr><td colspan="5" style="text-align:center; color:#555;">... (пропущено ${data.length - 24} месяцев) ...</td></tr>`;
+        }
+        tableHTML += `
+            <tr>
+                <td>${row.month}</td>
+                <td>${formatNumber(row.invested)}</td>
+                <td style="color: #4CAF50;">+${formatNumber(row.interest)}</td>
+                <td style="color: #3498db;">${formatNumber(row.withdrawn)}</td>
+                <td style="color: #FA9021; font-weight: 600;">${formatNumber(row.total)}</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `</tbody></table>`;
+    container.innerHTML = tableHTML;
+}
+
+function saveToStorage() {
+    const data = {
+        startSum: document.getElementById('startSum').value.replace(/[\s\u202F]/g, ''),
+        monthlyAdd: document.getElementById('monthlyAdd').value.replace(/[\s\u202F]/g, ''),
+        monthlyWithdraw: document.getElementById('monthlyWithdraw').value.replace(/[\s\u202F]/g, ''),
+        years: document.getElementById('years').value,
+        rate: document.getElementById('rate').value,
+        inflation: document.getElementById('inflation').value,
+        annualIncrease: document.getElementById('annualIncrease').value,
+        taxCheck: document.getElementById('taxCheck').checked,
+        reinvestCheck: document.getElementById('reinvestCheck').checked
+    };
+    localStorage.setItem('investCalcData', JSON.stringify(data));
+}
+
+function loadFromStorage() {
+    const saved = localStorage.getItem('investCalcData');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            document.getElementById('startSum').value = formatNumberInput(data.startSum || '100000');
+            document.getElementById('monthlyAdd').value = formatNumberInput(data.monthlyAdd || '10000');
+            document.getElementById('monthlyWithdraw').value = formatNumberInput(data.monthlyWithdraw || '0');
+            document.getElementById('years').value = data.years || '10';
+            document.getElementById('rate').value = data.rate || '12';
+            document.getElementById('inflation').value = data.inflation || '6';
+            document.getElementById('annualIncrease').value = data.annualIncrease || '0';
+            document.getElementById('taxCheck').checked = data.taxCheck || false;
+            document.getElementById('reinvestCheck').checked = data.reinvestCheck !== undefined ? data.reinvestCheck : true;
+        } catch (e) {
+            console.log("Ошибка загрузки данных", e);
+        }
+    }
+}
