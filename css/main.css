@@ -43,14 +43,14 @@ header { padding: 40px 0; }
 
 .input-group { margin-bottom: 20px; }
 .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #a0a0a0; }
-.input-group input {
+.input-group input, .input-group select {
     width: 100%; padding: 15px; background: #0f1115; border: 1px solid #2a2e37;
     border-radius: 8px; color: #fff; font-size: 16px; font-family: 'Poppins', sans-serif;
     outline: none; transition: border-color 0.3s;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.5px; 
 }
-.input-group input:focus { border-color: #FA9021; }
+.input-group input:focus, .input-group select:focus { border-color: #FA9021; }
 
 /* Переключатели */
 .toggles { margin: 25px 0; display: flex; flex-direction: column; gap: 15px; }
