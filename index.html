@@ -17,24 +17,22 @@
     
     <link rel="stylesheet" href="css/main.css">
 
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114180051', 'ym');
+        ym(114180051, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/114180051" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
 
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114180051', 'ym');
-
-    ym(114180051, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/114180051" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
-<!-- Yandex Autoplacement 20382291 -->
-<script src="https://yandex.ru/ads/system/context.js" async></script>
-<script data-page-id="20382291" src="https://yandex.ru/ads/system/ap-loader.js" async></script>
+    <!-- Yandex Autoplacement 20382291 -->
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+    <script data-page-id="20382291" src="https://yandex.ru/ads/system/ap-loader.js" async></script>
 </head>
 <body>
     <div class="wrapper">
@@ -51,8 +49,6 @@
             <div class="calc-box">
                 <!-- Левая часть: Форма -->
                 <div class="calc-form">
-                    <!-- ПРЕСЕТЫ УДАЛЕНЫ -->
-
                     <div class="input-group">
                         <label for="startSum">Начальная сумма (₽)</label>
                         <input type="text" id="startSum" value="100000" inputmode="numeric">
@@ -88,6 +84,36 @@
                         </label>
                     </div>
 
+                    <!-- Кнопка для расширенных настроек -->
+                    <div class="advanced-toggle" id="advancedToggleBtn">
+                        <span>Показать расширенные настройки</span>
+                        <span class="arrow">▼</span>
+                    </div>
+
+                    <!-- Скрытый блок расширенных настроек -->
+                    <div class="advanced-settings hidden" id="advancedSettings">
+                        <div class="input-group">
+                            <label for="monthlyWithdraw">Снимать ежемесячно (₽)</label>
+                            <input type="text" id="monthlyWithdraw" value="0" inputmode="numeric">
+                        </div>
+                        <div class="input-group">
+                            <label for="annualIncrease">Увеличивать взнос на (% в год)</label>
+                            <input type="number" id="annualIncrease" value="0" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="toggles" style="margin-top: 15px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="reinvestCheck" checked>
+                                <span class="slider"></span>
+                                <span class="toggle-label">Реинвестировать проценты</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="statsCheck">
+                                <span class="slider"></span>
+                                <span class="toggle-label">Показывать статистику по месяцам</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <button id="calcBtn" class="btn">Рассчитать</button>
                 </div>
 
@@ -110,11 +136,18 @@
                         <span>Итоговый капитал:</span>
                         <span id="totalResult" class="total-text">0 ₽</span>
                     </div>
+                     <div class="result-card" id="withdrawnResultCard" style="display:none;">
+                        <span>Выплачено на руки (за все время):</span>
+                        <span id="withdrawnResult" style="color: #3498db !important;">0 ₽</span>
+                    </div>
                     <div class="result-card highlight-inflation">
                         <span>Реальная сумма (с учетом инфляции):</span>
                         <span id="realResult">0 ₽</span>
                     </div>
-                
+                    <div class="result-card" style="border-left-color: #3498db;">
+                        <span>Реальная доходность (в год):</span>
+                        <span id="realRateResult" style="color: #3498db !important;">0%</span>
+                    </div>
                 </div>
             </div>
 
@@ -123,14 +156,21 @@
                 <h2>Динамика роста капитала</h2>
                 <canvas id="myChart"></canvas>
             </div>
-<!-- НОВЫЙ БЛОК: ТЕКСТ -->
+
+            <!-- Блок статистики по месяцам (скрыт по умолчанию) -->
+            <div class="monthly-stats-container hidden" id="monthlyStatsContainer">
+                <h2>Статистика по месяцам</h2>
+                <div id="monthlyStatsContent"></div>
+            </div>
+
+            <!-- Блок с текстом -->
             <div class="seo-text">
                 <h2>Что такое сложный процент и как им пользоваться</h2>
                 <p>Сложный процент — это «проценты на проценты». Когда вы инвестируете деньги, вы получаете доход. Если вы не снимаете этот доход, а оставляете его на счету, в следующем периоде проценты начисляются уже на увеличенную сумму. Это создает эффект «снежного кома», благодаря которому ваш капитал растет с каждым годом все быстрее.</p>
                 <p>Однако при планировании важно учитывать инфляцию. Номинальная сумма через 10 лет может казаться большой, но из-за роста цен ее покупательная способность будет ниже. Наш калькулятор автоматически пересчитывает итоговую сумму в «сегодняшние» деньги, чтобы вы видели реальную картину. Введите свои данные в поля выше, нажмите «Рассчитать» и посмотрите на график — вы увидите, как ваши деньги работают на вас.</p>
             </div>
 
-                        <!-- НОВЫЙ БЛОК: FAQ -->
+            <!-- Блок FAQ -->
             <div class="faq">
                 <h2>Частые вопросы</h2>
                 
